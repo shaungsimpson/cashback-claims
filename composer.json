@@ -1,0 +1,16 @@
+{
+    "name": "shaun/cashback-claims",
+    "type": "project",
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "Shaun Simpson",
+            "email": "shaungsimpson@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {"Inc\\": "./inc"}
+    }
+}
