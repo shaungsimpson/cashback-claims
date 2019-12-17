@@ -17,6 +17,7 @@ class FAQ {
     add_filter( 'manage_faq_posts_columns', array('Inc\CPT\FAQ', 'set_columns') );
     add_action( 'manage_faq_posts_custom_column', array('Inc\CPT\FAQ', 'get_columns'), 10, 2);
     add_filter( 'manage_edit-faq_sortable_columns', array('Inc\CPT\FAQ', 'sortable_columns'), 10, 1 );
+    add_action( 'pre_get_posts', array('Inc\CPT\FAQ', 'posts_orderby'));
   }
 
   // set up the FAQ custom post type
@@ -106,15 +107,24 @@ class FAQ {
     return $columns;
   }
 
-  // static function posts_orderby( $query ) {
-  //   if( ! is_admin() || ! $query->is_main_query() ) {
-  //     return;
-  //   }
-  //   if ( 'faq_position' === $query->get( 'orderby') ) {
-  //     $query->set( 'orderby', 'meta_value' );
-  //     $query->set( 'meta_key', 'faq_position' );
-  //     $query->set( 'meta_type', 'numeric' );
-  //   }
-  // }
+  static function posts_orderby( $query ) {
+    if( ! is_admin() || ! $query->is_main_query() ) {
+      return;
+    }
+    if ( $query->get('post_type') === 'faq' ) {
+      if ( $query->get( 'orderby') === '' ) {
+        $query->set( 'orderby', 'meta_value' );
+        $query->set( 'order', 'ASC' );
+        $query->set( 'meta_key', 'faq_position' );
+        $query->set( 'meta_type', 'numeric' );
+      }
+
+      if ( $query->get( 'orderby') === 'faq_position' ) {
+        $query->set( 'orderby', 'meta_value' );
+        $query->set( 'meta_key', 'faq_position' );
+        $query->set( 'meta_type', 'numeric' );
+      }
+    }
+  }
 
 }

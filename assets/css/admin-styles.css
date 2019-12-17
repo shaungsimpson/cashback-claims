@@ -1,0 +1,4 @@
+/* set width of FAQ position column in edit screen for FAQ CPT */
+.column-position {
+  width: 120px;
+}
