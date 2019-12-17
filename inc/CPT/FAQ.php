@@ -6,8 +6,6 @@ namespace Inc\CPT;
 
 class FAQ {
 
-  private $id;
-
   function __construct() {
   }
 
@@ -17,7 +15,8 @@ class FAQ {
     add_filter( 'manage_faq_posts_columns', array('Inc\CPT\FAQ', 'set_columns') );
     add_action( 'manage_faq_posts_custom_column', array('Inc\CPT\FAQ', 'get_columns'), 10, 2);
     add_filter( 'manage_edit-faq_sortable_columns', array('Inc\CPT\FAQ', 'sortable_columns'), 10, 1 );
-    add_action( 'pre_get_posts', array('Inc\CPT\FAQ', 'posts_orderby'));
+    add_action( 'pre_get_posts', array('Inc\CPT\FAQ', 'posts_orderby') );
+    add_shortcode( 'faq_list', array('Inc\CPT\FAQ', 'faq_list') );
   }
 
   // set up the FAQ custom post type
@@ -125,6 +124,33 @@ class FAQ {
         $query->set( 'meta_type', 'numeric' );
       }
     }
+  }
+
+  static public function faq_list( $atts ) {
+    $arr_settings = shortcode_atts( array(
+      'accordion' => true,
+    ), $atts );
+
+    $is_accordion = $arr_settings['accordion'];
+
+    $args = array(
+      'numberposts' => -1,
+      'post_type' => 'faq',
+      'post_status' => 'publish',
+      'order_by' => 'meta_value',
+      'order' => 'ASC',
+      'meta_key' => 'faq_position',
+      'meta_type' => 'numeric',
+    );
+
+    $faq_list = get_posts( $args );
+
+    ob_start();
+    require PLUGIN_PATH . 'templates/shortcodes/faq-list.php';
+    // echo "shortcode for FAQ list here";
+    $output = ob_get_clean();
+    return $output;
+
   }
 
 }
