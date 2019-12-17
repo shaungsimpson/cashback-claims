@@ -13,9 +13,7 @@ final class Init {
    */
   public static function get_services() {
     return array(
-      // eg. Pages\Admin::class,
-      // eg. Base\Enqueue::class,
-      // eg. Base\SettingsLinks::class
+      Core\Enqueue::class,
       CPT\Claim::class,
       CPT\FAQ::class,
     );
