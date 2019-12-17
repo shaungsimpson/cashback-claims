@@ -16,7 +16,8 @@ final class Init {
       // eg. Pages\Admin::class,
       // eg. Base\Enqueue::class,
       // eg. Base\SettingsLinks::class
-      // CPT\Claim::class
+      CPT\Claim::class,
+      CPT\FAQ::class,
     );
   }
 

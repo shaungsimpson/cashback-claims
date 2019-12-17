@@ -32,15 +32,15 @@ class Claim {
     $supports = array(
       'title',
       'editor',
-      'thumbnail',
+      'thumbnail'
     );
     $args = array(
       'labels'               => $labels,
-      'public'               => false,
+      'public'               => true,
       'has_archive'          => true,
       'rewrite'              => array("slug" => "claims"),
       'supports'             => $supports,
-      'menu_icon'            => 'dashicons-calendar-alt',
+      'menu_icon'            => plugins_url( '/cashback-claims/assets/icons/cashback-icon.png' )
       // 'register_meta_box_cb' => array( $this, 'swng_add_claim_metaboxes'),
     );
     // register the claims post type
