@@ -73,7 +73,6 @@ class FAQ {
 
     ob_start();
     ?>
-    <label><strong>FAQ Position</strong></label>
     <input class="widefat" type="number" name="faq_position" value="<?= $faq_position; ?>">
     <?php
     $box = ob_get_clean();
