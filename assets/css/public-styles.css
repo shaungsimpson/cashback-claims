@@ -1,5 +1,9 @@
 /* Styling for accordions */
  /* Style the buttons that are used to open and close the accordion panel */
+.faq-block {
+  margin:  1.25em 0;
+}
+
 .accordion {
   background-color: #eee;
   color: #444;
