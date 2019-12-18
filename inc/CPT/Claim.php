@@ -14,7 +14,7 @@ class Claim {
     add_action( 'save_post', array( 'Inc\CPT\Claim', 'save_meta' ) );
     add_filter( 'manage_claim_posts_columns', array('Inc\CPT\Claim', 'set_columns') );
     add_action( 'manage_claim_posts_custom_column', array('Inc\CPT\Claim', 'get_columns'), 10, 2);
-
+    add_filter( 'manage_edit-claim_sortable_columns', array('Inc\CPT\Claim', 'sortable_columns'), 10, 1 );
   }
 
   static function claim_post_type() {
@@ -143,6 +143,14 @@ class Claim {
         _e( $value );
       }
     }
+  }
+
+  static function sortable_columns( $columns ) {
+    $columns['first-name'] = 'first-name';
+    $columns['last-name'] = 'last-name';
+    $columns['email'] = 'email';
+    $columns['invoice-number'] = 'invoice-number';
+    return $columns;
   }
 
 }
