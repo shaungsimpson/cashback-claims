@@ -16,7 +16,7 @@ class Claim {
     add_action( 'manage_claim_posts_custom_column', array('Inc\CPT\Claim', 'get_columns'), 10, 2);
     add_filter( 'manage_edit-claim_sortable_columns', array('Inc\CPT\Claim', 'sortable_columns'), 10, 1 );
     // requires wpcf7, check if hook exists
-    if (has_action('wpcf7_mail_sent')) {
+    if ( is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) ) {
       add_action('wpcf7_mail_sent','save_form_to_claim');
     }
   }
@@ -136,35 +136,33 @@ class Claim {
 
   function save_form_to_claim( $contact_form ){
     $submission = WPCF7_Submission::get_instance();
+
+    // if submission does not exist, exit
     if (!$submission){
         return;
     }
+
     $posted_data = $submission->get_posted_data();
 
     $new_claim = array();
 
+    $new_claim['post_type'] = 'claim';
+    $new_claim['post_status'] = 'publish';
+
     $text_type = array('first-name', 'last-name', 'company-name', 'address-1', 'address-2', 'suburb', 'claim-state', 'postcode', 'purchase-state', 'purchase-location', 'invoice-number');
     foreach ($text as $key => $value) {
       if(isset($posted_data[$key]) && !empty($posted_data[$key])){
-        $new_post[$key] = sanitize_text_field( $posted_data[$key] );
+        $new_claim['meta_input'][$key] = sanitize_text_field( $posted_data[$key] );
       }
     }
-    $new_post['post_type'] = 'claim'; //insert here your CPT
-    if(isset($posted_data['my-message'])){
-        $new_post['post_content'] = $posted_data['my-message'];
-    } else {
-        $new_post['post_content'] = 'No Message was submitted';
-    }
-    $new_post['post_status'] = 'publish';
-    //you can also build your post_content from all of the fields of the form, or you can save them into some meta fields
-    if(isset($posted_data['my-email']) && !empty($posted_data['my-email'])){
-        $new_post['meta_input']['sender_email_address'] = $posted_data['my-email'];
-    }
-    if(isset($posted_data['my-name']) && !empty($posted_data['my-name'])){
-        $new_post['meta_input']['sender_name'] = $posted_data['my-name'];
-    }
+
+    // set the title as combining surname and invoice. Failsafe values included. values will be sanitised already.
+    $last_name = $new_claim['meta_input']['last-name'] ?? "Claim";
+    $invoice = $new_claim['meta_input']['invoice-number'] ?? "Invoice Missing";
+    $new_claim['post_title'] = "{$last_name}-{$invoice}";
+
     //When everything is prepared, insert the post into your Wordpress Database
-    if( $post_id = wp_insert_post($new_post)){
+    if( $post_id = wp_insert_post($new_claim)){
        //Everything worked, you can stop here or do whatever
     } else {
        //The post was not inserted correctly, do something (or don't ;) )
