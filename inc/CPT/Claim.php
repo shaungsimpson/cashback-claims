@@ -149,12 +149,29 @@ class Claim {
     $new_claim['post_type'] = 'claim';
     $new_claim['post_status'] = 'publish';
 
-    $text_type = array('first-name', 'last-name', 'company-name', 'address-1', 'address-2', 'suburb', 'claim-state', 'postcode', 'purchase-state', 'purchase-location', 'invoice-number');
-    foreach ($text as $key => $value) {
+    $text_fields = array('first-name', 'last-name', 'company-name', 'address-1', 'address-2', 'suburb', 'claim-state', 'postcode', 'purchase-state', 'purchase-location', 'invoice-number');
+    foreach ($text_fields as $key => $value) {
       if(isset($posted_data[$key]) && !empty($posted_data[$key])){
         $new_claim['meta_input'][$key] = sanitize_text_field( $posted_data[$key] );
       }
     }
+
+    $date_fields = array( 'claim-date', 'purchase-date' );
+    foreach ($date_fields as $key => $value) {
+      if ( in_array($key, $date_fields) )
+        $new_claim['meta_input'][$key] = date( 'Y-m-d', strtotime($_POST[$key]) );
+    }
+
+    if(isset($posted_data['email']) && !empty($posted_data['email'])){
+      $new_claim['meta_input']['email'] = sanitize_email( $posted_data['email'] );
+    }
+
+    if ( isset($posted_data['terms']) && !empty($posted_data['terms']))
+      $new_claim['meta_input']['terms'] = $posted_data['terms'] == true;
+
+    if ( isset($posted_data['mobile']) && !empty($posted_data['mobile']))
+      $new_claim['meta_input']['mobile'] = preg_replace('/[^0-9]/', '', $posted_data['mobile']);
+
 
     // set the title as combining surname and invoice. Failsafe values included. values will be sanitised already.
     $last_name = $new_claim['meta_input']['last-name'] ?? "Claim";
@@ -163,9 +180,11 @@ class Claim {
 
     //When everything is prepared, insert the post into your Wordpress Database
     if( $post_id = wp_insert_post($new_claim)){
-       //Everything worked, you can stop here or do whatever
+       // redirect to thank you page
+       // wp_redirect( $url );
     } else {
-       //The post was not inserted correctly, do something (or don't ;) )
+       // redirect to uh-oh page
+       // wp_redirect( $url );
     }
     return;
 }
