@@ -16,8 +16,12 @@
       $answer = $faq->post_content;
       ?>
       <div class="faq-block">
-        <strong><?= "{$position}. {$question}" ?></strong>
-        <p><?= $answer; ?></p>
+        <button class="accordion"><strong><?= "{$position}. {$question}" ?></strong></button>
+        <div class="panel">
+          <div class="answer">
+          <?= apply_filters('the_content', $answer); ?>
+          </div>
+        </div>
       </div>
       <?php
     } ?>
