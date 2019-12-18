@@ -11,6 +11,10 @@ class Claim {
 
   function register() {
     add_action( 'init', array( 'Inc\CPT\Claim', 'claim_post_type' ) );
+    add_action( 'save_post', array( 'Inc\CPT\Claim', 'save_meta' ) );
+    add_filter( 'manage_claim_posts_columns', array('Inc\CPT\Claim', 'set_columns') );
+    add_action( 'manage_claim_posts_custom_column', array('Inc\CPT\Claim', 'get_columns'), 10, 2);
+
   }
 
   static function claim_post_type() {
@@ -92,23 +96,52 @@ class Claim {
   }
 
   // set up saving post meta
-  static function save_meta($post_id) {
-    if ( array_key_exists( 'claim', $_POST ) ) {
-      update_post_meta( $post_id, 'claim', $_POST['claim'] );
+  static function save_meta( $post_id ) {
+    $meta_keys = array( 'first-name', 'last-name', 'company-name', 'mobile', 'email', 'address-1', 'address-2', 'suburb', 'claim-state', 'postcode', 'claim-date', 'terms', 'purchase-date', 'purchase-state', 'purchase-location', 'invoice-number', 'invoice-img' );
+    // arrays for sanitization by type
+    $text_type = array('first-name', 'last-name', 'company-name', 'address-1', 'address-2', 'suburb', 'claim-state', 'postcode', 'purchase-state', 'purchase-location', 'invoice-number');
+    $date_type = array( 'claim-date', 'purchase-date' );
+
+    foreach ($meta_keys as $key) {
+      if ( array_key_exists( $key, $_POST ) ) {
+        // sanitise email
+        if ( $key == 'email' )
+          $value = sanitize_email( $_POST[$key] );
+        // sanitise text fields
+        if ( in_array($key, $text_type) )
+          $value = sanitize_text_field( $_POST[$key] );
+        // sanitise date fields
+        if ( in_array($key, $date_type) )
+          $value = date( 'Y-m-d', strtotime($_POST[$key]) );
+        // sanitise terms meta, converts to boolean
+        if ( $key == 'terms' )
+          $value = $_POST[$key] == true;
+        // sanitises phone number
+        if ( $key == 'mobile' )
+          $value = preg_replace('/[^0-9]/', '', $_POST[$key]);
+
+        update_post_meta( $post_id, $key, $value );
+      }
     }
   }
 
   // set visible extra columns in post edit screen
   static function set_columns( $columns ) {
-    $columns['position'] = __( 'Position' );
+    $columns['first-name'] = __( 'First' );
+    $columns['last-name'] = __( 'Last' );
+    $columns['email'] = __( 'Email' );
+    $columns['invoice-number'] = __( 'Invoice' );
     return $columns;
   }
 
   // set extra columns values in post edit screen
   static function get_columns( $column, $post_id ) {
-    if ( $column === 'position' ) {
-      $position = get_post_meta( $post_id, 'claim', true );
-      _e( $position );
+    $keys = array('first-name', 'last-name', 'email', 'invoice-number');
+    foreach ($keys as $key) {
+      if ( $column === $key ) {
+        $value = get_post_meta( $post_id, $key, true );
+        _e( $value );
+      }
     }
   }
 

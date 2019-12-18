@@ -2,7 +2,14 @@
 .column-position {
   width: 120px;
 }
+/* set custom widths of Claim columns in edit screen for FAQ CPT */
+.column-first-name,
+.column-last-name {
+  width: 90px;
+}
 
+
+/* Claim metabox styles for form styling */
 #claim_metabox label {
   font-weight: 600;
 }
