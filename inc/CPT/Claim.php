@@ -15,10 +15,9 @@ class Claim {
     add_filter( 'manage_claim_posts_columns', array('Inc\CPT\Claim', 'set_columns') );
     add_action( 'manage_claim_posts_custom_column', array('Inc\CPT\Claim', 'get_columns'), 10, 2);
     add_filter( 'manage_edit-claim_sortable_columns', array('Inc\CPT\Claim', 'sortable_columns'), 10, 1 );
-    // requires wpcf7, check if hook exists
-    if ( is_plugin_active( 'contact-form-7/wp-contact-form-7.php' ) ) {
-      add_action('wpcf7_mail_sent','save_form_to_claim');
-    }
+    // requires wpcf7
+    add_action('wpcf7_before_send_mail', array('Inc\CPT\Claim', 'save_image_attachment') );
+    add_action('wpcf7_mail_sent', array('Inc\CPT\Claim', 'save_form_to_claim') );
   }
 
   static function claim_post_type() {
@@ -134,32 +133,38 @@ class Claim {
     return $columns;
   }
 
-  function save_form_to_claim( $contact_form ){
-    $submission = WPCF7_Submission::get_instance();
+  // wpcf7 deletes image uploads as soon as it send mail. This allows us to process and save it
+  function save_image_attachment() {
+
+  }
+
+  // process wpcf7 data once successful mail has been sent and create a new claim post type.
+  function save_form_to_claim( $contact_form ) {
+    $new_claim = array(
+     'post_type' => 'claim',
+     'post_status'=>'publish',
+    );
+
+    $submission = \WPCF7_Submission::get_instance();
 
     // if submission does not exist, exit
     if (!$submission){
-        return;
+      return;
     }
 
     $posted_data = $submission->get_posted_data();
 
-    $new_claim = array();
-
-    $new_claim['post_type'] = 'claim';
-    $new_claim['post_status'] = 'publish';
-
     $text_fields = array('first-name', 'last-name', 'company-name', 'address-1', 'address-2', 'suburb', 'claim-state', 'postcode', 'purchase-state', 'purchase-location', 'invoice-number');
-    foreach ($text_fields as $key => $value) {
-      if(isset($posted_data[$key]) && !empty($posted_data[$key])){
-        $new_claim['meta_input'][$key] = sanitize_text_field( $posted_data[$key] );
+    foreach ($text_fields as $field) {
+      if(isset($posted_data[$field]) && !empty($posted_data[$field])){
+        $new_claim['meta_input'][$field] = sanitize_text_field( $posted_data[$field] );
       }
     }
 
     $date_fields = array( 'claim-date', 'purchase-date' );
-    foreach ($date_fields as $key => $value) {
-      if ( in_array($key, $date_fields) )
-        $new_claim['meta_input'][$key] = date( 'Y-m-d', strtotime($_POST[$key]) );
+    foreach ($date_fields as $field) {
+      if ( in_array($field, $date_fields) )
+        $new_claim['meta_input'][$field] = date( 'Y-m-d', strtotime($_POST[$field]) );
     }
 
     if(isset($posted_data['email']) && !empty($posted_data['email'])){
@@ -180,8 +185,11 @@ class Claim {
 
     //When everything is prepared, insert the post into your Wordpress Database
     if( $post_id = wp_insert_post($new_claim)){
-       // redirect to thank you page
-       // wp_redirect( $url );
+      // redirect to thank you page
+      $new_claim['meta_input']['invoice-img'] = $posted_data['invoice-img'];
+      $attachment_id = media_handle_upload( 'my_image_upload', $_POST['post_id'] );
+      wp_redirect( "/thank-you/" );
+      return;
     } else {
        // redirect to uh-oh page
        // wp_redirect( $url );
