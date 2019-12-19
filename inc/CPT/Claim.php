@@ -16,7 +16,6 @@ class Claim {
     add_action( 'manage_claim_posts_custom_column', array('Inc\CPT\Claim', 'get_columns'), 10, 2);
     add_filter( 'manage_edit-claim_sortable_columns', array('Inc\CPT\Claim', 'sortable_columns'), 10, 1 );
     // requires wpcf7
-    add_action('wpcf7_before_send_mail', array('Inc\CPT\Claim', 'save_image_attachment') );
     add_action('wpcf7_mail_sent', array('Inc\CPT\Claim', 'save_form_to_claim') );
   }
 
@@ -100,6 +99,15 @@ class Claim {
         if ( $key == 'mobile' )
           $value = preg_replace('/[^0-9]/', '', $_POST[$key]);
 
+        // sort out saving of invoice file
+        if ( $key == 'invoice-img' ){
+          $upload_path = function_exists('\dnd_get_upload_dir') ? \dnd_get_upload_dir() : "";
+          $simple_path = dirname( $upload_path['upload_url'] );
+
+          $value = trailingslashit( $simple_path ) . $_POST['invoice-img'][0];
+        }
+
+
         update_post_meta( $post_id, $key, $value );
       }
     }
@@ -133,16 +141,11 @@ class Claim {
     return $columns;
   }
 
-  // wpcf7 deletes image uploads as soon as it send mail. This allows us to process and save it
-  function save_image_attachment() {
-
-  }
-
   // process wpcf7 data once successful mail has been sent and create a new claim post type.
   function save_form_to_claim( $contact_form ) {
     $new_claim = array(
-     'post_type' => 'claim',
-     'post_status'=>'publish',
+      'post_type' => 'claim',
+      'post_status'=>'publish',
     );
 
     $submission = \WPCF7_Submission::get_instance();
@@ -177,24 +180,14 @@ class Claim {
     if ( isset($posted_data['mobile']) && !empty($posted_data['mobile']))
       $new_claim['meta_input']['mobile'] = preg_replace('/[^0-9]/', '', $posted_data['mobile']);
 
-
     // set the title as combining surname and invoice. Failsafe values included. values will be sanitised already.
     $last_name = $new_claim['meta_input']['last-name'] ?? "Claim";
     $invoice = $new_claim['meta_input']['invoice-number'] ?? "Invoice Missing";
     $new_claim['post_title'] = "{$last_name}-{$invoice}";
 
     //When everything is prepared, insert the post into your Wordpress Database
-    if( $post_id = wp_insert_post($new_claim)){
-      // redirect to thank you page
-      $new_claim['meta_input']['invoice-img'] = $posted_data['invoice-img'];
-      $attachment_id = media_handle_upload( 'my_image_upload', $_POST['post_id'] );
-      wp_redirect( "/thank-you/" );
-      return;
-    } else {
-       // redirect to uh-oh page
-       // wp_redirect( $url );
-    }
+    $post_id = wp_insert_post($new_claim);
     return;
-}
+  }
 
 }

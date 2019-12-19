@@ -25,6 +25,8 @@ $meta_fields = array(
   "invoice-img" => array( 'key' => "invoice-img", 'label' => 'Uploaded Invoice', 'type' => 'file', 'required' => true ),
 );
 
+$consent = get_post_meta($post_id, 'terms', true) == 1;
+
 function input_field( $meta_field ) {
   global $post_id;
   $value = get_post_meta($post_id, $meta_field['key'], true) ?? '';
@@ -38,13 +40,13 @@ function state_select( $meta_field ) {
   $states = array('NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS');
   $value = get_post_meta($post_id, $meta_field['key'], true) ?? '';
   ?>
-    <label><?= $meta_field['label'] ?></label>
-    <select name="<?= $meta_field['key'] ?>" <?= $meta_field['required'] ? 'required ' : '' ?>>
-      <?php foreach ($states as $state) { ?>
-        <option value="<?= $state ?>" <?= selected( $meta_field['key'], $state, true, 'selected' ) ?>><?= $state ?></option>
-      <?php } ?>
-    </select>
-  <?php }
+  <label><?= $meta_field['label'] ?></label>
+  <select name="<?= $meta_field['key'] ?>" <?= $meta_field['required'] ? 'required ' : '' ?>>
+    <?php foreach ($states as $state) { ?>
+      <option value="<?= $state ?>" <?= selected( $meta_field['key'], $state, true, 'selected' ) ?>><?= $state ?></option>
+    <?php } ?>
+  </select>
+<?php }
 ?>
 <h4>Personal Details</h4>
 <div class="row">
@@ -89,23 +91,31 @@ function state_select( $meta_field ) {
   </div>
 </div>
 <div class="row">
-  <label><input type="checkbox" name="terms" required="required">Terms and conditions agreed to</label value="">
+  <label>
+    <input type="checkbox" name="terms" required="required" <?= checked( $consent ); ?>>
+    Terms and conditions agreed to
+  </label>
+</div>
+<hr>
+<h4>Purchase Details</h4>
+<div class="row">
+  <div class="half">
+    <?php input_field( $meta_fields['purchase-date']); ?>
   </div>
-  <hr>
-  <h4>Purchase Details</h4>
-  <div class="row">
-    <div class="half">
-      <?php input_field( $meta_fields['purchase-date']); ?>
-    </div>
-    <div class="half">
-      <?= state_select( $meta_fields['purchase-state'] ) ?>
-    </div>
+  <div class="half">
+    <?= state_select( $meta_fields['purchase-state'] ) ?>
   </div>
-  <div class="row">
-    <div class="half">
-      <?php input_field( $meta_fields['purchase-location']); ?>
-    </div>
-    <div class="half">
-      <?php input_field( $meta_fields['invoice-number']); ?>
-    </div>
+</div>
+<div class="row">
+  <div class="half">
+    <?php input_field( $meta_fields['purchase-location']); ?>
   </div>
+  <div class="half">
+    <?php input_field( $meta_fields['invoice-number']); ?>
+  </div>
+</div>
+<div class="row">
+  <label>Invoice attached:
+  <a style="margin-left: 2em;" href="<?= get_post_meta($post_id, 'invoice-img', true) ?>" target="_blank">Link to invoice</a>
+  </label>
+</div>
