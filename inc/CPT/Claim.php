@@ -15,6 +15,7 @@ class Claim {
     add_filter( 'manage_claim_posts_columns', array('Inc\CPT\Claim', 'set_columns') );
     add_action( 'manage_claim_posts_custom_column', array('Inc\CPT\Claim', 'get_columns'), 10, 2);
     add_filter( 'manage_edit-claim_sortable_columns', array('Inc\CPT\Claim', 'sortable_columns'), 10, 1 );
+    add_action( 'pre_get_posts', array('Inc\CPT\Claim', 'posts_orderby') );
     // requires wpcf7
     add_action('wpcf7_mail_sent', array('Inc\CPT\Claim', 'save_form_to_claim') );
   }
@@ -118,7 +119,7 @@ class Claim {
     $columns['first-name'] = __( 'First' );
     $columns['last-name'] = __( 'Last' );
     $columns['email'] = __( 'Email' );
-    $columns['invoice-number'] = __( 'Invoice' );
+    $columns['invoice-number'] = __( 'Invoice #' );
     return $columns;
   }
 
@@ -134,11 +135,26 @@ class Claim {
   }
 
   static function sortable_columns( $columns ) {
-    $columns['first-name'] = 'first-name';
-    $columns['last-name'] = 'last-name';
-    $columns['email'] = 'email';
-    $columns['invoice-number'] = 'invoice-number';
+    $columns['first-name'] = array('first-name', true);
+    $columns['last-name'] = array('last-name', true);
+    $columns['email'] = array('email', true);
+    $columns['invoice-number'] = array('invoice-number', true);
     return $columns;
+  }
+
+  static function posts_orderby( $query ) {
+    if( ! is_admin() || ! $query->is_main_query() ) {
+      return;
+    }
+    if ( $query->get('post_type') === 'claim' ) {
+
+      $orderby = $query->get( 'orderby');
+      $sort_by_metavalue = array('first-name', 'last-name', 'email', 'invoice-number');
+      if ( in_array($orderby, $sort_by_metavalue) ) {
+        $query->set( 'meta_key', $orderby );
+        $query->set( 'orderby', 'meta_value' );
+      }
+    }
   }
 
   // process wpcf7 data once successful mail has been sent and create a new claim post type.
