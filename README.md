@@ -1,5 +1,5 @@
 # cashback-claims
-Plugin component of the Gsquared challenge
+Plugin component of a technical interview code challenge.
 
 This was part of a submitted solution for a technical interview step in a multi phase job interview. The challenge was to 
 provide a cashback claim digital solution to a prospective client based on a UI design given, with a few guidelines.
